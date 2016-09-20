@@ -32,7 +32,7 @@ define 'keycloak-converger' do
   pom.add_github_project('realityforge/keycloak-converger')
   pom.add_developer('realityforge', 'Peter Donald')
 
-  compile.with :getopt4j, KEYCLOAK
+  compile.with PACKAGED_DEPS
 
   package(:jar).tap do |jar|
     PACKAGED_DEPS.each do |dep|
