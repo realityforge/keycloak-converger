@@ -1,0 +1,7 @@
+*.iml
+/*.ids
+/*.ipr
+/*.iws
+/reports
+/target
+/tmp
