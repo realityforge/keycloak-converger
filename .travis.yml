@@ -1,0 +1,9 @@
+language: java
+jdk:
+  - oraclejdk7
+install:
+  - gem install bundler
+  - bundle install
+script: buildr clean package
+git:
+  depth: 10
