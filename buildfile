@@ -50,6 +50,7 @@ define 'keycloak-converger' do
   compile.with PACKAGED_DEPS
 
   package(:jar).tap do |jar|
+    jar.manifest['Main-Class'] = 'org.realityforge.keycloak.converger.Main'
     PACKAGED_DEPS.each do |dep|
       jar.merge artifact(dep)
     end
