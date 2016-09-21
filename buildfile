@@ -31,7 +31,7 @@ KEYCLOAK = %w(
     org.keycloak:keycloak-core:jar:2.2.0.Final
  )
 
-PACKAGED_DEPS = KEYCLOAK + [:getopt4j, :javax_json_api, :javax_json_impl]
+PACKAGED_DEPS = KEYCLOAK + [:getopt4j, :javax_json_impl]
 
 desc 'keycloak-converger: Converge the state of a keycloak realm'
 define 'keycloak-converger' do
