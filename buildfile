@@ -33,7 +33,7 @@ KEYCLOAK = %w(
 
 PACKAGED_DEPS = KEYCLOAK + [:getopt4j, :javax_json_api, :javax_json_impl]
 
-desc 'keycloak-converger: Update a keycloak relams list of clients.'
+desc 'keycloak-converger: Converge the state of a keycloak realm'
 define 'keycloak-converger' do
   project.group = 'org.realityforge.keycloak.converger'
 
