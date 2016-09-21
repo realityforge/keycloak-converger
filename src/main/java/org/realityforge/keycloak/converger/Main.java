@@ -1,12 +1,18 @@
 package org.realityforge.keycloak.converger;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.StringReader;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.ws.rs.core.Response;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.representations.idm.ClientRepresentation;
@@ -118,7 +124,10 @@ public class Main
                               c_adminPassword );
 
       final RealmResource realm = keycloak.realm( c_realmName );
-      final List<ClientRepresentation> clients = realm.clients().findAll();
+
+      final Map<String, String> clients = buildClientConfigurations();
+      uploadClients( realm, clients );
+      removeUnmatchedClients( realm, clients );
 
       System.exit( SUCCESS_EXIT_CODE );
     }
@@ -130,6 +139,179 @@ public class Main
         e.printStackTrace( System.out );
       }
       System.exit( ERROR_PATCHING_CODE );
+    }
+  }
+
+  private static void removeUnmatchedClients( final RealmResource realm, final Map<String, String> clients )
+    throws Exception
+  {
+    for ( final ClientRepresentation client : realm.clients().findAll() )
+    {
+      final String clientId = client.getClientId();
+      if ( !clients.containsKey( clientId ) && !c_unmanagedClients.contains( clientId ) )
+      {
+
+        try
+        {
+          info( "Deleting client configuration for clientId '" + clientId + "'" );
+          realm.clients().get( client.getId() ).remove();
+        }
+        catch ( final Exception e )
+        {
+          error( "Error deleting client configuration " + clientId );
+          throw e;
+        }
+      }
+    }
+  }
+
+  private static void uploadClients( final RealmResource realm, final Map<String, String> clients )
+  {
+    final List<ClientRepresentation> existing = realm.clients().findAll();
+
+    for ( final Map.Entry<String, String> entry : clients.entrySet() )
+    {
+      final String clientID = entry.getKey();
+      final String configuration = entry.getValue();
+
+      final ClientRepresentation client = findExistingClient( existing, clientID );
+      if ( null != client )
+      {
+        updateClient( realm, client, configuration );
+      }
+      else
+      {
+        createClient( realm, clientID, configuration );
+      }
+    }
+  }
+
+  private static ClientRepresentation findExistingClient( final List<ClientRepresentation> existing,
+                                                          final String clientID )
+  {
+    ClientRepresentation client = null;
+    for ( final ClientRepresentation candidate : existing )
+    {
+      if ( candidate.getClientId().equals( clientID ) )
+      {
+        client = candidate;
+        break;
+      }
+    }
+    return client;
+  }
+
+  private static void updateClient( final RealmResource realm,
+                                    final ClientRepresentation client,
+                                    final String configuration )
+  {
+    info( "Updating client with clientId '" + client.getClientId() + "'" );
+    try
+    {
+      final ClientRepresentation candidate = realm.convertClientDescription( configuration );
+      realm.clients().get( client.getId() ).update( candidate );
+    }
+    catch ( final Exception e )
+    {
+      error( "Error uploading client configuration " + client.getClientId() );
+      throw e;
+    }
+  }
+
+  private static void createClient( final RealmResource realm, final String clientID, final String configuration )
+  {
+    info( "Creating client with clientId '" + clientID + "'" );
+    try
+    {
+      final Response response = realm.clients().create( realm.convertClientDescription( configuration ) );
+      if ( response.getStatus() != Response.Status.CREATED.getStatusCode() )
+      {
+        final String message =
+          "Failed to create client '" + clientID + "' due to " +
+          response.getStatusInfo().getStatusCode() + ":" + response.getStatusInfo().getReasonPhrase();
+        throw new IllegalStateException( message );
+      }
+    }
+    catch ( final Exception e )
+    {
+      error( "Error uploading client configuration " + clientID );
+      throw e;
+    }
+  }
+
+  private static Map<String, String> buildClientConfigurations()
+    throws Exception
+  {
+    final Map<String, String> clientConfigurations = new HashMap<>();
+    final File[] files = c_dir.listFiles();
+    assert null != files;
+    for ( final File file : files )
+    {
+      if ( !file.isDirectory() && file.getName().endsWith( ".json" ) )
+      {
+        try
+        {
+          buildClientConfiguration( clientConfigurations, file );
+        }
+        catch ( final Exception e )
+        {
+          error( "Error building client configuration from file " + file );
+          throw e;
+        }
+      }
+    }
+    return clientConfigurations;
+  }
+
+  private static void buildClientConfiguration( final Map<String, String> clientConfigurations, final File file )
+    throws IOException
+  {
+    final String data = loadAndTransformClient( file );
+    final JsonObject clientJson = Json.createReader( new StringReader( data ) ).readObject();
+    final String clientID = clientJson.getString( "clientId" );
+    if ( clientConfigurations.containsKey( clientID ) )
+    {
+      final String message =
+        "Client with clientId '" + clientID + "' defined multiple times in client directory";
+      throw new IllegalStateException( message );
+    }
+    clientConfigurations.put( clientID, data );
+  }
+
+  /**
+   * Load the file from file system and process using mustache replacement
+   */
+  private static String loadAndTransformClient( final File file )
+    throws IOException
+  {
+    final byte[] byteData = Files.readAllBytes( file.toPath() );
+    final String data = new String( byteData, "US-ASCII" );
+
+    final Pattern pattern = Pattern.compile( "\\{\\{([^}].+)\\}\\}" );
+    final Matcher matcher = pattern.matcher( data );
+
+    boolean result = matcher.find();
+    if ( result )
+    {
+      final StringBuffer sb = new StringBuffer();
+      do
+      {
+        final String var = matcher.group( 1 );
+        final String replacement = c_envs.get( var );
+        if ( null == replacement )
+        {
+          throw new IllegalStateException( "Unable to replace variable '" + var + "'" );
+        }
+        matcher.appendReplacement( sb, replacement );
+        result = matcher.find();
+      } while ( result );
+      matcher.appendTail( sb );
+
+      return sb.toString();
+    }
+    else
+    {
+      return data;
     }
   }
 
