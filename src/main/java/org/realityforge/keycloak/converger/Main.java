@@ -234,17 +234,17 @@ public class Main
       error( "Configuration directory specified " + c_dir.getAbsolutePath() + " is not a directory." );
       return false;
     }
-    if( null == c_realmName )
+    if ( null == c_realmName )
     {
       error( "No realm specified to update." );
       return false;
     }
-    if( null == c_serverURL )
+    if ( null == c_serverURL )
     {
       error( "No server url specified." );
       return false;
     }
-    if( null == c_adminPassword )
+    if ( null == c_adminPassword )
     {
       error( "No admin password specified." );
       return false;
