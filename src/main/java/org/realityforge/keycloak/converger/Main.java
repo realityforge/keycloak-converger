@@ -4,7 +4,9 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.representations.idm.ClientRepresentation;
@@ -82,7 +84,7 @@ public class Main
   private static final int ERROR_PATCHING_CODE = 2;
 
   private static boolean c_verbose;
-  private static final List<Env> c_envs = new ArrayList<>();
+  private static final Map<String, String> c_envs = new HashMap<>();
   private static final List<String> c_unmanagedClients = new ArrayList<>();
   private static File c_dir;
   private static String c_adminRealmName = "master";
@@ -186,7 +188,7 @@ public class Main
         }
         case ENV_OPT:
         {
-          c_envs.add( new Env( option.getArgument(), option.getArgument( 1 ) ) );
+          c_envs.put( option.getArgument(), option.getArgument( 1 ) );
           break;
         }
         case UNMANAGED_CLIENT_OPT:
@@ -259,9 +261,9 @@ public class Main
       if ( !c_envs.isEmpty() )
       {
         info( "Env vars:" );
-        for ( final Env env : c_envs )
+        for ( final Map.Entry<String, String> entry : c_envs.entrySet() )
         {
-          info( "\t" + env.getKey() + " = " + env.getValue() );
+          info( "\t" + entry.getKey() + " = " + entry.getValue() );
         }
       }
       if ( !c_unmanagedClients.isEmpty() )
