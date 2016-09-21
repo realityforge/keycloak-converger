@@ -31,6 +31,7 @@ public class Main
   private static final int ADMIN_REALM_NAME_OPT = 3;
   private static final int ADMIN_CLIENT_NAME_OPT = 4;
   private static final int REALM_NAME_OPT = 5;
+  private static final int STANDARD_UNMANAGED_CLIENTS_OPT = 6;
   private static final int ADMIN_USERNAME_OPT = 'u';
   private static final int ADMIN_PASSWORD_OPT = 'p';
   private static final int ENV_OPT = 'e';
@@ -79,6 +80,10 @@ public class Main
                             CLOptionDescriptor.ARGUMENTS_REQUIRED_2 | CLOptionDescriptor.DUPLICATES_ALLOWED,
                             UNMANAGED_CLIENT_OPT,
                             "Client configurations that should not be deleted." ),
+    new CLOptionDescriptor( "standard-unmanaged-clients",
+                            CLOptionDescriptor.ARGUMENT_DISALLOWED,
+                            STANDARD_UNMANAGED_CLIENTS_OPT,
+                            "Add the default set of keycloak clients to those unmanaged." ),
     new CLOptionDescriptor( "verbose",
                             CLOptionDescriptor.ARGUMENT_DISALLOWED,
                             VERBOSE_OPT,
@@ -371,6 +376,15 @@ public class Main
         case ENV_OPT:
         {
           c_envs.put( option.getArgument(), option.getArgument( 1 ) );
+          break;
+        }
+        case STANDARD_UNMANAGED_CLIENTS_OPT:
+        {
+          c_unmanagedClients.add( "admin-cli" );
+          c_unmanagedClients.add( "account" );
+          c_unmanagedClients.add( "broker" );
+          c_unmanagedClients.add( "realm-management" );
+          c_unmanagedClients.add( "security-admin-console" );
           break;
         }
         case UNMANAGED_CLIENT_OPT:

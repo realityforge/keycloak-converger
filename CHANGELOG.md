@@ -1,3 +1,7 @@
+## 1.3:
+
+* Add `--standard-unmanaged-clients` to add the standard set of unmaanged clients.
+
 ## 1.2:
 
 * Add `Main-Class` to manifest.
