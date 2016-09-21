@@ -12,7 +12,6 @@ KEYCLOAK = %w(
     commons-codec:commons-codec:jar:1.9
     commons-io:commons-io:jar:2.1
     commons-logging:commons-logging:jar:1.2
-    javax.activation:activation:jar:1.1.1
     net.jcip:jcip-annotations:jar:1.0
     org.apache.httpcomponents:httpclient:jar:4.5
     org.apache.httpcomponents:httpcore:jar:4.4.1
@@ -23,10 +22,8 @@ KEYCLOAK = %w(
     org.jboss.resteasy:resteasy-jackson2-provider:jar:3.0.14.Final
     org.jboss.resteasy:resteasy-jaxrs:jar:3.0.14.Final
     org.jboss.spec.javax.annotation:jboss-annotations-api_1.2_spec:jar:1.0.0.Final
-    org.jboss.spec.javax.servlet:jboss-servlet-api_3.1_spec:jar:1.0.0.Final
     org.jboss.spec.javax.ws.rs:jboss-jaxrs-api_2.0_spec:jar:1.0.0.Final
     org.keycloak:keycloak-admin-client:jar:2.2.0.Final
-    org.keycloak:keycloak-client-registration-api:jar:2.2.0.Final
     org.keycloak:keycloak-common:jar:2.2.0.Final
     org.keycloak:keycloak-core:jar:2.2.0.Final
  )
