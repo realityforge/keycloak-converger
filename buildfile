@@ -49,7 +49,15 @@ define 'keycloak-converger' do
   package(:jar).tap do |jar|
     jar.manifest['Main-Class'] = 'org.realityforge.keycloak.converger.Main'
     PACKAGED_DEPS.each do |dep|
-      jar.merge artifact(dep)
+      jar.merge(artifact(dep)).
+        exclude('META-INF/MANIFEST.MF').
+        exclude('META-INF/services/javax.ws.rs.ext.Providers').
+        exclude('META-INF/maven/*').
+        exclude('META-INF/INDEX.LIST').
+        exclude('META-INF/LICENSE*').
+        exclude('META-INF/DEPENDENCIES').
+        exclude('META-INF/NOTICE*').
+        exclude('META-INF/BC*')
     end
   end
   package(:sources)
