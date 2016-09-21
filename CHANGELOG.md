@@ -1,6 +1,7 @@
 ## 1.3:
 
 * Add `--standard-unmanaged-clients` to add the standard set of unmaanged clients.
+* Require explicit argument to delete unmatched clients.
 
 ## 1.2:
 

@@ -32,6 +32,7 @@ public class Main
   private static final int ADMIN_CLIENT_NAME_OPT = 4;
   private static final int REALM_NAME_OPT = 5;
   private static final int STANDARD_UNMANAGED_CLIENTS_OPT = 6;
+  private static final int DELETE_UNKNOWN_CLIENTS_OPT = 7;
   private static final int ADMIN_USERNAME_OPT = 'u';
   private static final int ADMIN_PASSWORD_OPT = 'p';
   private static final int ENV_OPT = 'e';
@@ -84,6 +85,10 @@ public class Main
                             CLOptionDescriptor.ARGUMENT_DISALLOWED,
                             STANDARD_UNMANAGED_CLIENTS_OPT,
                             "Add the default set of keycloak clients to those unmanaged." ),
+    new CLOptionDescriptor( "delete-unknown-clients",
+                            CLOptionDescriptor.ARGUMENT_DISALLOWED,
+                            DELETE_UNKNOWN_CLIENTS_OPT,
+                            "Delete unknown clients." ),
     new CLOptionDescriptor( "verbose",
                             CLOptionDescriptor.ARGUMENT_DISALLOWED,
                             VERBOSE_OPT,
@@ -95,6 +100,7 @@ public class Main
   private static final int ERROR_PATCHING_CODE = 2;
 
   private static boolean c_verbose;
+  private static boolean c_delete;
   private static final Map<String, String> c_envs = new HashMap<>();
   private static final List<String> c_unmanagedClients = new ArrayList<>();
   private static File c_dir;
@@ -132,7 +138,10 @@ public class Main
 
       final Map<String, String> clients = buildClientConfigurations();
       uploadClients( realm, clients );
-      removeUnmatchedClients( realm, clients );
+      if ( c_delete )
+      {
+        removeUnmatchedClients( realm, clients );
+      }
 
       System.exit( SUCCESS_EXIT_CODE );
     }
@@ -376,6 +385,11 @@ public class Main
         case ENV_OPT:
         {
           c_envs.put( option.getArgument(), option.getArgument( 1 ) );
+          break;
+        }
+        case DELETE_UNKNOWN_CLIENTS_OPT:
+        {
+          c_delete = true;
           break;
         }
         case STANDARD_UNMANAGED_CLIENTS_OPT:
