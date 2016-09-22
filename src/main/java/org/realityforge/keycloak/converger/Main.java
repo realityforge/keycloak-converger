@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.json.Json;
@@ -299,6 +300,39 @@ public class Main
     final byte[] byteData = Files.readAllBytes( file.toPath() );
     final String data = new String( byteData, "US-ASCII" );
 
+    return replaceUUIDs( replaceVars( data ) );
+  }
+
+  /**
+   * Need to replace UUIDs as the database uses them to uniquely distinguish elements.
+   */
+  private static String replaceUUIDs( final String data )
+  {
+    final Pattern pattern = Pattern.compile( "[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}" );
+    final Matcher matcher = pattern.matcher( data );
+
+    boolean result = matcher.find();
+    if ( result )
+    {
+      final StringBuffer sb = new StringBuffer();
+      do
+      {
+        final String replacement = UUID.randomUUID().toString();
+        matcher.appendReplacement( sb, replacement );
+        result = matcher.find();
+      } while ( result );
+      matcher.appendTail( sb );
+
+      return sb.toString();
+    }
+    else
+    {
+      return data;
+    }
+  }
+
+  private static String replaceVars( final String data )
+  {
     final Pattern pattern = Pattern.compile( "\\{\\{([^}].+)\\}\\}" );
     final Matcher matcher = pattern.matcher( data );
 
