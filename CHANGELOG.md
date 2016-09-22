@@ -1,5 +1,11 @@
 ## 1.3:
 
+* Add verbose info message indicating whether unknown clients are deleted.
+* Cleanup default parameters.
+* Replace all UUIDs during upload to avoid constraint violations in keycloak server.
+
+## 1.3:
+
 * Add `--standard-unmanaged-clients` to add the standard set of unmaanged clients.
 * Require explicit argument to delete unmatched clients.
 
