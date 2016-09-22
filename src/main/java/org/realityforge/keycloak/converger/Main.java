@@ -109,7 +109,6 @@ public class Main
   private static String c_adminUsername = "admin";
   private static String c_adminPassword;
   private static String c_serverURL = "https://id.ffm.vic.gov.au";
-
   private static String c_realmName = "FfmRealm";
 
   public static void main( final String[] args )
