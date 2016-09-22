@@ -1,4 +1,4 @@
-## 1.3:
+## 1.4:
 
 * Add verbose info message indicating whether unknown clients are deleted.
 * Cleanup default parameters.
