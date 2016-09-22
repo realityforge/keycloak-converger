@@ -465,6 +465,7 @@ public class Main
       info( "Admin Client Name: " + c_adminClient );
       info( "Admin Username: " + c_adminUsername );
       info( "Realm: " + c_realmName );
+      info( "Delete Unknown Clients: " + c_delete );
 
       info( "Configuration directory: " + c_dir.getAbsolutePath() );
       if ( !c_envs.isEmpty() )
