@@ -163,7 +163,6 @@ public class Main
       final String clientId = client.getClientId();
       if ( !clients.containsKey( clientId ) && !c_unmanagedClients.contains( clientId ) )
       {
-
         try
         {
           info( "Deleting client configuration for clientId '" + clientId + "'" );
