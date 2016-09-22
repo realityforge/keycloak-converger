@@ -108,8 +108,8 @@ public class Main
   private static String c_adminClient = "admin-cli";
   private static String c_adminUsername = "admin";
   private static String c_adminPassword;
-  private static String c_serverURL = "https://id.ffm.vic.gov.au";
-  private static String c_realmName = "FfmRealm";
+  private static String c_serverURL;
+  private static String c_realmName;
 
   public static void main( final String[] args )
   {
