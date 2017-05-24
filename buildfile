@@ -34,8 +34,8 @@ desc 'keycloak-converger: Converge the state of a keycloak realm'
 define 'keycloak-converger' do
   project.group = 'org.realityforge.keycloak.converger'
 
-  compile.options.source = '1.7'
-  compile.options.target = '1.7'
+  compile.options.source = '1.8'
+  compile.options.target = '1.8'
   compile.options.lint = 'all'
 
   project.version = ENV['PRODUCT_VERSION'] if ENV['PRODUCT_VERSION']
