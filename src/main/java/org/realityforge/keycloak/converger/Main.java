@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.json.Json;
@@ -34,6 +35,7 @@ public class Main
   private static final int REALM_NAME_OPT = 5;
   private static final int STANDARD_UNMANAGED_CLIENTS_OPT = 6;
   private static final int DELETE_UNKNOWN_CLIENTS_OPT = 7;
+  private static final int DELETE_CLIENT_OPT = 8;
   private static final int ADMIN_USERNAME_OPT = 'u';
   private static final int ADMIN_PASSWORD_OPT = 'p';
   private static final int ENV_OPT = 'e';
@@ -90,6 +92,10 @@ public class Main
                             CLOptionDescriptor.ARGUMENT_DISALLOWED,
                             DELETE_UNKNOWN_CLIENTS_OPT,
                             "Delete unknown clients." ),
+    new CLOptionDescriptor( "delete-client",
+                            CLOptionDescriptor.ARGUMENT_REQUIRED | CLOptionDescriptor.DUPLICATES_ALLOWED,
+                            DELETE_CLIENT_OPT,
+                            "Delete specific client." ),
     new CLOptionDescriptor( "verbose",
                             CLOptionDescriptor.ARGUMENT_DISALLOWED,
                             VERBOSE_OPT,
@@ -101,9 +107,10 @@ public class Main
   private static final int ERROR_PATCHING_CODE = 2;
 
   private static boolean c_verbose;
-  private static boolean c_delete;
+  private static boolean c_deleteUnmatchedClients;
   private static final Map<String, String> c_envs = new HashMap<>();
   private static final List<String> c_unmanagedClients = new ArrayList<>();
+  private static final List<String> c_clientsToDelete = new ArrayList<>();
   private static File c_dir;
   private static String c_adminRealmName = "master";
   private static String c_adminClient = "admin-cli";
@@ -138,9 +145,13 @@ public class Main
 
       final Map<String, String> clients = buildClientConfigurations();
       uploadClients( realm, clients );
-      if ( c_delete )
+      if ( c_deleteUnmatchedClients )
       {
         removeUnmatchedClients( realm, clients );
+      }
+      if ( !c_clientsToDelete.isEmpty() )
+      {
+        removeClients( realm, c_clientsToDelete::contains );
       }
 
       System.exit( SUCCESS_EXIT_CODE );
@@ -159,22 +170,33 @@ public class Main
   private static void removeUnmatchedClients( final RealmResource realm, final Map<String, String> clients )
     throws Exception
   {
+    removeClients( realm, clientId -> !clients.containsKey( clientId ) && !c_unmanagedClients.contains( clientId ) );
+  }
+
+  private static void removeClients( final RealmResource realm, final Predicate<String> shouldDelete )
+    throws Exception
+  {
     for ( final ClientRepresentation client : realm.clients().findAll() )
     {
       final String clientId = client.getClientId();
-      if ( !clients.containsKey( clientId ) && !c_unmanagedClients.contains( clientId ) )
+      if ( shouldDelete.test( clientId ) )
       {
-        try
-        {
-          info( "Deleting client configuration for clientId '" + clientId + "'" );
-          realm.clients().get( client.getId() ).remove();
-        }
-        catch ( final Exception e )
-        {
-          error( "Error deleting client configuration " + clientId );
-          throw e;
-        }
+        deleteClient( realm, client.getId(), clientId );
       }
+    }
+  }
+
+  private static void deleteClient( final RealmResource realm, final String id, final String clientId )
+  {
+    try
+    {
+      info( "Deleting client configuration for clientId '" + clientId + "'" );
+      realm.clients().get( id ).remove();
+    }
+    catch ( final Exception e )
+    {
+      error( "Error deleting client configuration " + clientId );
+      throw e;
     }
   }
 
@@ -308,7 +330,8 @@ public class Main
    */
   private static String replaceUUIDs( final String data )
   {
-    final Pattern pattern = Pattern.compile( "[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}" );
+    final Pattern pattern =
+      Pattern.compile( "[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}" );
     final Matcher matcher = pattern.matcher( data );
 
     boolean result = matcher.find();
@@ -421,7 +444,7 @@ public class Main
         }
         case DELETE_UNKNOWN_CLIENTS_OPT:
         {
-          c_delete = true;
+          c_deleteUnmatchedClients = true;
           break;
         }
         case STANDARD_UNMANAGED_CLIENTS_OPT:
@@ -431,6 +454,11 @@ public class Main
           c_unmanagedClients.add( "broker" );
           c_unmanagedClients.add( "realm-management" );
           c_unmanagedClients.add( "security-admin-console" );
+          break;
+        }
+        case DELETE_CLIENT_OPT:
+        {
+          c_clientsToDelete.add( option.getArgument() );
           break;
         }
         case UNMANAGED_CLIENT_OPT:
@@ -498,7 +526,7 @@ public class Main
       info( "Admin Client Name: " + c_adminClient );
       info( "Admin Username: " + c_adminUsername );
       info( "Realm: " + c_realmName );
-      info( "Delete Unknown Clients: " + c_delete );
+      info( "Delete Unknown Clients: " + c_deleteUnmatchedClients );
 
       info( "Configuration directory: " + c_dir.getAbsolutePath() );
       if ( !c_envs.isEmpty() )
