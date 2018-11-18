@@ -1,6 +1,6 @@
 # keycloak-converger
 
-[![Build Status](https://secure.travis-ci.org/realityforge/keycloak-converger.png?branch=master)](http://travis-ci.org/realityforge/keycloak-converger)
+[![Build Status](https://secure.travis-ci.org/realityforge/keycloak-converger.svg?branch=master)](http://travis-ci.org/realityforge/keycloak-converger)
 [<img src="https://img.shields.io/maven-central/v/org.realityforge.keycloak.converger/keycloak-converger.svg?label=latest%20release"/>](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.realityforge.keycloak.converger%22%20a%3A%22keycloak-converger%22)
 
 This command line tool converges a keycloak realm to ensure it contains the required clients.
