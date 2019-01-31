@@ -1,3 +1,7 @@
+## 1.7:
+
+* Upgrade keycloak libraries to 3.4.3-final
+
 ## 1.4:
 
 * Add verbose info message indicating whether unknown clients are deleted.
