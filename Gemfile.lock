@@ -20,6 +20,7 @@ GEM
     diff-lcs (1.2.5)
     gitattributes (2.9.0)
     json_pure (1.8.3)
+    mcrt (1.13.0)
     minitar (0.5.4)
     net-sftp (2.1.2)
       net-ssh (>= 2.6.5)
@@ -36,6 +37,7 @@ PLATFORMS
 
 DEPENDENCIES
   buildr (= 1.5.6)
+  mcrt (= 1.13.0)
   zapwhite (= 2.10.0)
 
 BUNDLED WITH
