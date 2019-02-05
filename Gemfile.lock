@@ -4,7 +4,7 @@ GEM
     atoulme-Antwrap (0.7.5)
       rjb (>= 1.0.3)
     builder (3.2.2)
-    buildr (1.5.5)
+    buildr (1.5.6)
       atoulme-Antwrap (= 0.7.5)
       builder (= 3.2.2)
       bundler
@@ -18,6 +18,7 @@ GEM
       rubyzip (= 1.2.0)
       xml-simple (= 1.1.5)
     diff-lcs (1.2.5)
+    gitattributes (2.9.0)
     json_pure (1.8.3)
     minitar (0.5.4)
     net-sftp (2.1.2)
@@ -27,12 +28,15 @@ GEM
     rjb (1.5.4)
     rubyzip (1.2.0)
     xml-simple (1.1.5)
+    zapwhite (2.10.0)
+      gitattributes (= 2.9.0)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
-  buildr (= 1.5.5)
+  buildr (= 1.5.6)
+  zapwhite (= 2.10.0)
 
 BUNDLED WITH
-   1.16.0
+   1.17.1
