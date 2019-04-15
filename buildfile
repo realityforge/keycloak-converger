@@ -22,9 +22,9 @@ KEYCLOAK = %w(
     org.jboss.resteasy:resteasy-jaxrs:jar:3.0.14.Final
     org.jboss.spec.javax.annotation:jboss-annotations-api_1.2_spec:jar:1.0.0.Final
     org.jboss.spec.javax.ws.rs:jboss-jaxrs-api_2.0_spec:jar:1.0.0.Final
-    org.keycloak:keycloak-admin-client:jar:3.4.3.Final
-    org.keycloak:keycloak-common:jar:3.4.3.Final
-    org.keycloak:keycloak-core:jar:3.4.3.Final
+    org.keycloak:keycloak-admin-client:jar:5.0.0
+    org.keycloak:keycloak-common:jar:5.0.0
+    org.keycloak:keycloak-core:jar:5.0.0
  )
 
 PACKAGED_DEPS = KEYCLOAK + [:getopt4j, :javax_json_impl]
