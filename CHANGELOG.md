@@ -1,3 +1,7 @@
+## 1.8:
+
+* Upgrade keycloak libraries to `5.0.0`
+
 ## 1.7:
 
 * Upgrade keycloak libraries to 3.4.3-final
