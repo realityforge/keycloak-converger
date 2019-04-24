@@ -29,7 +29,7 @@ GEM
     rjb (1.5.4)
     rubyzip (1.2.0)
     xml-simple (1.1.5)
-    zapwhite (2.13.0)
+    zapwhite (2.14.0)
       gitattributes (= 2.9.0)
 
 PLATFORMS
@@ -38,7 +38,7 @@ PLATFORMS
 DEPENDENCIES
   buildr (= 1.5.7)
   mcrt (= 1.13.0)
-  zapwhite (= 2.13.0)
+  zapwhite (= 2.14.0)
 
 BUNDLED WITH
    1.17.1
