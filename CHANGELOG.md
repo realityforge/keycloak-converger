@@ -1,5 +1,7 @@
 ### Unreleased
 
+* Upgrade the `org.realityforge.getopt4j` artifact to version `0.3`.
+
 ### [v1.8](https://github.com/realityforge/keycloak-converger/tree/v1.8)
 [Full Changelog](https://github.com/realityforge/keycloak-converger/compare/v1.7...v1.8)
 

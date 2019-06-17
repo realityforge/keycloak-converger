@@ -3,5 +3,5 @@ repositories:
    - https://repo.maven.apache.org/maven2
 
 artifacts:
-  getopt4j: org.realityforge.getopt4j:getopt4j:jar:1.2
+  getopt4j: org.realityforge.getopt4j:getopt4j:jar:0.3
   javax_json_impl: org.glassfish:javax.json:jar:1.0.4
