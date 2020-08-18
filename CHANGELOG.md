@@ -2,6 +2,7 @@
 
 * Upgrade the `org.realityforge.getopt4j` artifact to version `1.3`.
 * Automate the release process.
+* Upgrade keycloak libraries to `11.0.0`
 
 ### [v1.8](https://github.com/realityforge/keycloak-converger/tree/v1.8) · [Full Changelog](https://github.com/realityforge/keycloak-converger/compare/v1.7...v1.8)
 
