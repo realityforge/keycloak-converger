@@ -3,6 +3,7 @@
 ### Unreleased
 
 * Add some additional logging when retrieving secrets.
+* Fix bug where client secrets were being incorrectly downloaded for public clients and not for confidential clients.
 
 ### [v1.11](https://github.com/realityforge/keycloak-converger/tree/v1.11) (2020-09-01) · [Full Changelog](https://github.com/realityforge/keycloak-converger/compare/v1.10...v1.11)
 
