@@ -81,6 +81,8 @@ define 'keycloak-converger' do
   package(:sources)
   package(:javadoc)
 
+  ipr.add_java_configuration(project, 'org.realityforge.keycloak.converger.Main', :name => 'Run', :dir => 'file://$PROJECT_DIR$', :args => '-v')
+
   iml.excluded_directories << project._('tmp')
 
   ipr.add_component_from_artifact(:idea_codestyle)
