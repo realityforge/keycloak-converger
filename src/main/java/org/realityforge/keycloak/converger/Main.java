@@ -256,6 +256,7 @@ public class Main
       final Boolean publicClient = client.isPublicClient();
       if ( null != publicClient && publicClient )
       {
+        info( "Retrieving client secret for confidential client with clientId '" + client.getClientId() + "'" );
         final ClientResource clientResource = realm.clients().get( client.getId() );
         final CredentialRepresentation secret = clientResource.getSecret();
         if ( null != secret )
