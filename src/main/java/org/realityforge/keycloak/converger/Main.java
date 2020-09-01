@@ -19,6 +19,7 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.ws.rs.core.Response;
 import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.resource.ClientResource;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.realityforge.getopt4j.CLArgsParser;
@@ -256,7 +257,8 @@ public class Main
     try
     {
       final ClientRepresentation candidate = realm.convertClientDescription( configuration );
-      realm.clients().get( client.getId() ).update( candidate );
+      final ClientResource clientResource = realm.clients().get( client.getId() );
+      clientResource.update( candidate );
     }
     catch ( final Exception e )
     {
