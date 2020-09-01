@@ -376,7 +376,7 @@ public class Main
   @Nonnull
   private static String replaceVars( @Nonnull final String data )
   {
-    final Pattern pattern = Pattern.compile( "\\{\\{([^}].+)\\}\\}" );
+    final Pattern pattern = Pattern.compile( "\\{\\{([^}].+)}}" );
     final Matcher matcher = pattern.matcher( data );
 
     boolean result = matcher.find();
