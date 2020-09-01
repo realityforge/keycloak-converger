@@ -44,7 +44,6 @@ KEYCLOAK = %w(
     com.sun.istack:istack-commons-runtime:jar:3.0.10
     org.jvnet.staxex:stax-ex:jar:1.8
     com.sun.xml.fastinfoset:FastInfoset:jar:1.2.15
-    javax.activation:javax.activation-api:jar:1.2.0
  )
 
 PACKAGED_DEPS = KEYCLOAK + [:getopt4j, :javax_json_impl]
