@@ -574,19 +574,13 @@ public class Main
   private static void printUsage()
   {
     final String lineSeparator = System.getProperty( "line.separator" );
-
-    final StringBuilder msg = new StringBuilder();
-
-    msg.append( "java " );
-    msg.append( Main.class.getName() );
-    msg.append( " [options] message" );
-    msg.append( lineSeparator );
-    msg.append( "Options: " );
-    msg.append( lineSeparator );
-
-    msg.append( CLUtil.describeOptions( OPTIONS ).toString() );
-
-    info( msg.toString() );
+    info( "java " +
+          Main.class.getName() +
+          " [options] message" +
+          lineSeparator +
+          "Options: " +
+          lineSeparator +
+          CLUtil.describeOptions( OPTIONS ) );
   }
 
   private static void info( @Nonnull final String message )
