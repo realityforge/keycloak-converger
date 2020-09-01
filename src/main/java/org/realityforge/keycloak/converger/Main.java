@@ -179,13 +179,11 @@ public class Main
 
   private static void removeUnmatchedClients( @Nonnull final RealmResource realm,
                                               @Nonnull final Map<String, String> clients )
-    throws Exception
   {
     removeClients( realm, clientId -> !clients.containsKey( clientId ) && !c_unmanagedClients.contains( clientId ) );
   }
 
   private static void removeClients( @Nonnull final RealmResource realm, @Nonnull final Predicate<String> shouldDelete )
-    throws Exception
   {
     for ( final ClientRepresentation client : realm.clients().findAll() )
     {
