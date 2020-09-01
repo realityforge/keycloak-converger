@@ -80,4 +80,6 @@ define 'keycloak-converger' do
   end
   package(:sources)
   package(:javadoc)
+
+  iml.excluded_directories << project._('tmp')
 end
