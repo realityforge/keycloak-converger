@@ -12,6 +12,8 @@ import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.ws.rs.core.Response;
@@ -42,7 +44,7 @@ public class Main
   private static final int UNMANAGED_CLIENT_OPT = 'c';
   private static final int VERBOSE_OPT = 'v';
   private static final int DIR_OPT = 'd';
-
+  @Nonnull
   private static final CLOptionDescriptor[] OPTIONS = new CLOptionDescriptor[]{
     new CLOptionDescriptor( "help",
                             CLOptionDescriptor.ARGUMENT_DISALLOWED,
@@ -101,25 +103,32 @@ public class Main
                             VERBOSE_OPT,
                             "print verbose message while operating." )
   };
-
   private static final int SUCCESS_EXIT_CODE = 0;
   private static final int ERROR_PARSING_ARGS_EXIT_CODE = 1;
   private static final int ERROR_PATCHING_CODE = 2;
-
   private static boolean c_verbose;
   private static boolean c_deleteUnmatchedClients;
+  @Nonnull
   private static final Map<String, String> c_envs = new HashMap<>();
+  @Nonnull
   private static final List<String> c_unmanagedClients = new ArrayList<>();
+  @Nonnull
   private static final List<String> c_clientsToDelete = new ArrayList<>();
   private static File c_dir;
+  @Nonnull
   private static String c_adminRealmName = "master";
+  @Nonnull
   private static String c_adminClient = "admin-cli";
+  @Nonnull
   private static String c_adminUsername = "admin";
+  @Nullable
   private static String c_adminPassword;
+  @Nullable
   private static String c_serverURL;
+  @Nullable
   private static String c_realmName;
 
-  public static void main( final String[] args )
+  public static void main( @Nonnull final String[] args )
   {
     if ( !processOptions( args ) )
     {
@@ -167,13 +176,14 @@ public class Main
     }
   }
 
-  private static void removeUnmatchedClients( final RealmResource realm, final Map<String, String> clients )
+  private static void removeUnmatchedClients( @Nonnull final RealmResource realm,
+                                              @Nonnull final Map<String, String> clients )
     throws Exception
   {
     removeClients( realm, clientId -> !clients.containsKey( clientId ) && !c_unmanagedClients.contains( clientId ) );
   }
 
-  private static void removeClients( final RealmResource realm, final Predicate<String> shouldDelete )
+  private static void removeClients( @Nonnull final RealmResource realm, @Nonnull final Predicate<String> shouldDelete )
     throws Exception
   {
     for ( final ClientRepresentation client : realm.clients().findAll() )
@@ -186,7 +196,9 @@ public class Main
     }
   }
 
-  private static void deleteClient( final RealmResource realm, final String id, final String clientId )
+  private static void deleteClient( @Nonnull final RealmResource realm,
+                                    @Nonnull final String id,
+                                    @Nonnull final String clientId )
   {
     try
     {
@@ -200,7 +212,7 @@ public class Main
     }
   }
 
-  private static void uploadClients( final RealmResource realm, final Map<String, String> clients )
+  private static void uploadClients( @Nonnull final RealmResource realm, @Nonnull final Map<String, String> clients )
   {
     final List<ClientRepresentation> existing = realm.clients().findAll();
 
@@ -221,8 +233,9 @@ public class Main
     }
   }
 
-  private static ClientRepresentation findExistingClient( final List<ClientRepresentation> existing,
-                                                          final String clientID )
+  @Nullable
+  private static ClientRepresentation findExistingClient( @Nonnull final List<ClientRepresentation> existing,
+                                                          @Nonnull final String clientID )
   {
     ClientRepresentation client = null;
     for ( final ClientRepresentation candidate : existing )
@@ -236,9 +249,9 @@ public class Main
     return client;
   }
 
-  private static void updateClient( final RealmResource realm,
-                                    final ClientRepresentation client,
-                                    final String configuration )
+  private static void updateClient( @Nonnull final RealmResource realm,
+                                    @Nonnull final ClientRepresentation client,
+                                    @Nonnull final String configuration )
   {
     info( "Updating client with clientId '" + client.getClientId() + "'" );
     try
@@ -253,7 +266,9 @@ public class Main
     }
   }
 
-  private static void createClient( final RealmResource realm, final String clientID, final String configuration )
+  private static void createClient( @Nonnull final RealmResource realm,
+                                    @Nonnull final String clientID,
+                                    @Nonnull final String configuration )
   {
     info( "Creating client with clientId '" + clientID + "'" );
     try
@@ -274,6 +289,7 @@ public class Main
     }
   }
 
+  @Nonnull
   private static Map<String, String> buildClientConfigurations()
     throws Exception
   {
@@ -298,7 +314,8 @@ public class Main
     return clientConfigurations;
   }
 
-  private static void buildClientConfiguration( final Map<String, String> clientConfigurations, final File file )
+  private static void buildClientConfiguration( @Nonnull final Map<String, String> clientConfigurations,
+                                                @Nonnull final File file )
     throws IOException
   {
     final String data = loadAndTransformClient( file );
@@ -328,7 +345,8 @@ public class Main
   /**
    * Need to replace UUIDs as the database uses them to uniquely distinguish elements.
    */
-  private static String replaceUUIDs( final String data )
+  @Nonnull
+  private static String replaceUUIDs( @Nonnull final String data )
   {
     final Pattern pattern =
       Pattern.compile( "[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}" );
@@ -354,7 +372,8 @@ public class Main
     }
   }
 
-  private static String replaceVars( final String data )
+  @Nonnull
+  private static String replaceVars( @Nonnull final String data )
   {
     final Pattern pattern = Pattern.compile( "\\{\\{([^}].+)\\}\\}" );
     final Matcher matcher = pattern.matcher( data );
@@ -384,7 +403,7 @@ public class Main
     }
   }
 
-  private static boolean processOptions( final String[] args )
+  private static boolean processOptions( @Nonnull final String[] args )
   {
     // Parse the arguments
     final CLArgsParser parser = new CLArgsParser( args, OPTIONS );
@@ -571,12 +590,12 @@ public class Main
     info( msg.toString() );
   }
 
-  private static void info( final String message )
+  private static void info( @Nonnull final String message )
   {
     System.out.println( message );
   }
 
-  private static void error( final String message )
+  private static void error( @Nonnull final String message )
   {
     System.out.println( "Error: " + message );
   }
