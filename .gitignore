@@ -1,4 +1,5 @@
 /config
+/Gemfile.lock
 *.iml
 /*.ids
 /*.ipr
