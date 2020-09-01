@@ -42,6 +42,7 @@ public class Main
   private static final int STANDARD_UNMANAGED_CLIENTS_OPT = 6;
   private static final int DELETE_UNKNOWN_CLIENTS_OPT = 7;
   private static final int DELETE_CLIENT_OPT = 8;
+  private static final int SECRETS_DIR_OPT = 9;
   private static final int ADMIN_USERNAME_OPT = 'u';
   private static final int ADMIN_PASSWORD_OPT = 'p';
   private static final int ENV_OPT = 'e';
@@ -82,6 +83,10 @@ public class Main
                             CLOptionDescriptor.ARGUMENT_REQUIRED,
                             DIR_OPT,
                             "the directory of client configurations." ),
+    new CLOptionDescriptor( "secrets-dir",
+                            CLOptionDescriptor.ARGUMENT_REQUIRED,
+                            SECRETS_DIR_OPT,
+                            "the directory where client secrets are downloaded to." ),
     new CLOptionDescriptor( "env",
                             CLOptionDescriptor.ARGUMENTS_REQUIRED_2 | CLOptionDescriptor.DUPLICATES_ALLOWED,
                             ENV_OPT,
@@ -132,7 +137,7 @@ public class Main
   private static String c_serverURL;
   @Nullable
   private static String c_realmName;
-  private static File c_secretDir;
+  private static File c_secretsDir;
 
   public static void main( @Nonnull final String[] args )
   {
@@ -258,15 +263,20 @@ public class Main
           final String value = secret.getValue();
           if ( null != value )
           {
-            final Path secretFile = c_secretDir.toPath().resolve( clientID );
+            final Path dir = c_secretsDir.toPath();
+            final Path secretFile = dir.resolve( clientID );
             try
             {
+              if ( !Files.exists( dir ) )
+              {
+                Files.createDirectories( dir );
+              }
               Files.write( secretFile, value.getBytes( StandardCharsets.US_ASCII ) );
             }
-            catch ( IOException e )
+            catch ( final IOException ioe )
             {
               error( "Error writing keycloak secret for client " + clientID + " in " +
-                     "the realm " + c_realmName + ". Error: " + e );
+                     "the realm " + c_realmName + ". Error: " + ioe );
               System.exit( ERROR_WRITING_CLIENT_SECRET_CODE );
             }
           }
@@ -528,6 +538,11 @@ public class Main
           c_unmanagedClients.add( option.getArgument() );
           break;
         }
+        case SECRETS_DIR_OPT:
+        {
+          c_secretsDir = new File( option.getArgument() );
+          break;
+        }
         case DIR_OPT:
         {
           c_dir = new File( option.getArgument() );
@@ -566,27 +581,22 @@ public class Main
       error( "Configuration directory specified " + c_dir.getAbsolutePath() + " is not a directory." );
       return false;
     }
-    if ( null != c_secretDir )
+    if ( null != c_secretsDir )
     {
-      if ( !c_secretDir.exists() )
+      if ( c_secretsDir.exists() && !c_secretsDir.canRead() )
       {
-        error( "Secret directory specified " + c_secretDir.getAbsolutePath() + " does not exist." );
+        error( "Secret directory specified " + c_secretsDir.getAbsolutePath() + " is not readable." );
         return false;
       }
-      if ( !c_secretDir.canRead() )
+      if ( c_secretsDir.exists() && !c_secretsDir.isDirectory() )
       {
-        error( "Secret directory specified " + c_secretDir.getAbsolutePath() + " is not readable." );
-        return false;
-      }
-      if ( !c_secretDir.isDirectory() )
-      {
-        error( "Secret directory specified " + c_secretDir.getAbsolutePath() + " is not a directory." );
+        error( "Secret directory specified " + c_secretsDir.getAbsolutePath() + " is not a directory." );
         return false;
       }
     }
     else
     {
-      c_secretDir = c_dir;
+      c_secretsDir = c_dir;
     }
     if ( null == c_realmName )
     {
@@ -613,6 +623,7 @@ public class Main
       info( "Delete Unknown Clients: " + c_deleteUnmatchedClients );
 
       info( "Configuration directory: " + c_dir.getAbsolutePath() );
+      info( "Secrets directory: " + c_secretsDir.getAbsolutePath() );
       if ( !c_envs.isEmpty() )
       {
         info( "Env vars:" );
