@@ -1,5 +1,7 @@
 # Change Log
 
+### Unreleased
+
 ### [v1.10](https://github.com/realityforge/keycloak-converger/tree/v1.10) (2020-09-01) · [Full Changelog](https://github.com/realityforge/keycloak-converger/compare/v1.9...v1.10)
 
 * Save the client secrets as part of the converge process.
