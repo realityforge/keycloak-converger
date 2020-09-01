@@ -94,7 +94,7 @@ public class Main
     new CLOptionDescriptor( "unmanaged-client",
                             CLOptionDescriptor.ARGUMENTS_REQUIRED_2 | CLOptionDescriptor.DUPLICATES_ALLOWED,
                             UNMANAGED_CLIENT_OPT,
-                            "Client configurations that should not be deleted." ),
+                            "Client configurations that should not be deleted and should have clients downloaded." ),
     new CLOptionDescriptor( "standard-unmanaged-clients",
                             CLOptionDescriptor.ARGUMENT_DISALLOWED,
                             STANDARD_UNMANAGED_CLIENTS_OPT,
@@ -249,37 +249,49 @@ public class Main
     final List<ClientRepresentation> existing = realm.clients().findAll();
     for ( final Map.Entry<String, String> entry : clients.entrySet() )
     {
-      final String clientID = entry.getKey();
-      final ClientRepresentation client = findExistingClient( existing, clientID );
+      final ClientRepresentation client = findExistingClient( existing, entry.getKey() );
       assert null != client;
-
-      final Boolean publicClient = client.isPublicClient();
-      if ( null != publicClient && !publicClient )
+      collectClientSecret( realm, client );
+    }
+    for ( final String clientID : c_unmanagedClients )
+    {
+      final ClientRepresentation client = findExistingClient( existing, clientID );
+      if ( null != client )
       {
-        info( "Retrieving client secret for confidential client with clientId '" + client.getClientId() + "'" );
-        final ClientResource clientResource = realm.clients().get( client.getId() );
-        final CredentialRepresentation secret = clientResource.getSecret();
-        if ( null != secret )
+        collectClientSecret( realm, client );
+      }
+    }
+  }
+
+  private static void collectClientSecret( @Nonnull final RealmResource realm,
+                                           @Nonnull final ClientRepresentation client )
+  {
+    final Boolean publicClient = client.isPublicClient();
+    if ( null != publicClient && !publicClient )
+    {
+      info( "Retrieving client secret for confidential client with clientId '" + client.getClientId() + "'" );
+      final ClientResource clientResource = realm.clients().get( client.getId() );
+      final CredentialRepresentation secret = clientResource.getSecret();
+      if ( null != secret )
+      {
+        final String value = secret.getValue();
+        if ( null != value )
         {
-          final String value = secret.getValue();
-          if ( null != value )
+          final Path dir = c_secretsDir.toPath();
+          final Path secretFile = dir.resolve( client.getClientId() );
+          try
           {
-            final Path dir = c_secretsDir.toPath();
-            final Path secretFile = dir.resolve( clientID );
-            try
+            if ( !Files.exists( dir ) )
             {
-              if ( !Files.exists( dir ) )
-              {
-                Files.createDirectories( dir );
-              }
-              Files.write( secretFile, value.getBytes( StandardCharsets.US_ASCII ) );
+              Files.createDirectories( dir );
             }
-            catch ( final IOException ioe )
-            {
-              error( "Error writing keycloak secret for client " + clientID + " in " +
-                     "the realm " + c_realmName + ". Error: " + ioe );
-              System.exit( ERROR_WRITING_CLIENT_SECRET_CODE );
-            }
+            Files.write( secretFile, value.getBytes( StandardCharsets.US_ASCII ) );
+          }
+          catch ( final IOException ioe )
+          {
+            error( "Error writing keycloak secret for client " + client.getClientId() + " in " +
+                   "the realm " + c_realmName + ". Error: " + ioe );
+            System.exit( ERROR_WRITING_CLIENT_SECRET_CODE );
           }
         }
       }

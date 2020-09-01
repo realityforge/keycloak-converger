@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+* Collect client secrets for unmanaged clients.
+
 ### [v1.12](https://github.com/realityforge/keycloak-converger/tree/v1.12) (2020-09-01) · [Full Changelog](https://github.com/realityforge/keycloak-converger/compare/v1.11...v1.12)
 
 * Add some additional logging when retrieving secrets.
