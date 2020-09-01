@@ -46,7 +46,7 @@ KEYCLOAK = %w(
     com.sun.xml.fastinfoset:FastInfoset:jar:1.2.15
  )
 
-PACKAGED_DEPS = KEYCLOAK + [:getopt4j, :javax_json_impl]
+PACKAGED_DEPS = KEYCLOAK + [:getopt4j, :javax_json_impl, :javax_annotation]
 
 desc 'keycloak-converger: Converge the state of a keycloak realm'
 define 'keycloak-converger' do
