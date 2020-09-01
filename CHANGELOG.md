@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+* Save the client secrets as part of the converge process.
+
 ### [v1.9](https://github.com/realityforge/keycloak-converger/tree/v1.9) (2020-08-18) · [Full Changelog](https://github.com/realityforge/keycloak-converger/compare/v1.8...v1.9)
 
 * Upgrade the `org.realityforge.getopt4j` artifact to version `1.3`.

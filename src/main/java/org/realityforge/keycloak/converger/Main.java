@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +23,7 @@ import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.ClientResource;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.representations.idm.ClientRepresentation;
+import org.keycloak.representations.idm.CredentialRepresentation;
 import org.realityforge.getopt4j.CLArgsParser;
 import org.realityforge.getopt4j.CLOption;
 import org.realityforge.getopt4j.CLOptionDescriptor;
@@ -108,6 +110,7 @@ public class Main
   private static final int SUCCESS_EXIT_CODE = 0;
   private static final int ERROR_PARSING_ARGS_EXIT_CODE = 1;
   private static final int ERROR_PATCHING_CODE = 2;
+  private static final int ERROR_WRITING_CLIENT_SECRET_CODE = 3;
   private static boolean c_verbose;
   private static boolean c_deleteUnmatchedClients;
   @Nonnull
@@ -129,6 +132,7 @@ public class Main
   private static String c_serverURL;
   @Nullable
   private static String c_realmName;
+  private static File c_secretDir;
 
   public static void main( @Nonnull final String[] args )
   {
@@ -164,6 +168,7 @@ public class Main
       {
         removeClients( realm, c_clientsToDelete::contains );
       }
+      collectClientSecrets( realm, clients );
 
       System.exit( SUCCESS_EXIT_CODE );
     }
@@ -229,6 +234,43 @@ public class Main
       else
       {
         createClient( realm, clientID, configuration );
+      }
+    }
+  }
+
+  private static void collectClientSecrets( @Nonnull final RealmResource realm,
+                                            @Nonnull final Map<String, String> clients )
+  {
+    final List<ClientRepresentation> existing = realm.clients().findAll();
+    for ( final Map.Entry<String, String> entry : clients.entrySet() )
+    {
+      final String clientID = entry.getKey();
+      final ClientRepresentation client = findExistingClient( existing, clientID );
+      assert null != client;
+
+      final Boolean publicClient = client.isPublicClient();
+      if ( null != publicClient && publicClient )
+      {
+        final ClientResource clientResource = realm.clients().get( client.getId() );
+        final CredentialRepresentation secret = clientResource.getSecret();
+        if ( null != secret )
+        {
+          final String value = secret.getValue();
+          if ( null != value )
+          {
+            final Path secretFile = c_secretDir.toPath().resolve( clientID );
+            try
+            {
+              Files.write( secretFile, value.getBytes( StandardCharsets.US_ASCII ) );
+            }
+            catch ( IOException e )
+            {
+              error( "Error writing keycloak secret for client " + clientID + " in " +
+                     "the realm " + c_realmName + ". Error: " + e );
+              System.exit( ERROR_WRITING_CLIENT_SECRET_CODE );
+            }
+          }
+        }
       }
     }
   }
@@ -523,6 +565,28 @@ public class Main
     {
       error( "Configuration directory specified " + c_dir.getAbsolutePath() + " is not a directory." );
       return false;
+    }
+    if ( null != c_secretDir )
+    {
+      if ( !c_secretDir.exists() )
+      {
+        error( "Secret directory specified " + c_secretDir.getAbsolutePath() + " does not exist." );
+        return false;
+      }
+      if ( !c_secretDir.canRead() )
+      {
+        error( "Secret directory specified " + c_secretDir.getAbsolutePath() + " is not readable." );
+        return false;
+      }
+      if ( !c_secretDir.isDirectory() )
+      {
+        error( "Secret directory specified " + c_secretDir.getAbsolutePath() + " is not a directory." );
+        return false;
+      }
+    }
+    else
+    {
+      c_secretDir = c_dir;
     }
     if ( null == c_realmName )
     {
