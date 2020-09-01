@@ -3,6 +3,7 @@ package org.realityforge.keycloak.converger;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -337,7 +338,7 @@ public class Main
     throws IOException
   {
     final byte[] byteData = Files.readAllBytes( file.toPath() );
-    final String data = new String( byteData, "US-ASCII" );
+    final String data = new String( byteData, StandardCharsets.US_ASCII );
 
     return replaceUUIDs( replaceVars( data ) );
   }
