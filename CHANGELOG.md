@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+* Upgrade the `au.com.stocksoftware.idea.codestyle` artifact to version `1.17`.
+
 ### [v1.13](https://github.com/realityforge/keycloak-converger/tree/v1.13) (2020-09-01) · [Full Changelog](https://github.com/realityforge/keycloak-converger/compare/v1.12...v1.13)
 
 * Collect client secrets for unmanaged clients.

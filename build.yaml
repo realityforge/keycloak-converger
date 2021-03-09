@@ -6,6 +6,6 @@ artifacts:
   getopt4j: org.realityforge.getopt4j:getopt4j:jar:1.3
   javax_json_impl: org.glassfish:javax.json:jar:1.0.4
 
-  idea_codestyle: au.com.stocksoftware.idea.codestyle:idea-codestyle:xml:1.14
+  idea_codestyle: au.com.stocksoftware.idea.codestyle:idea-codestyle:xml:1.17
 
   javax_annotation: org.realityforge.javax.annotation:javax.annotation:jar:1.0.1
