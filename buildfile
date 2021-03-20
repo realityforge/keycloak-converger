@@ -1,6 +1,8 @@
 require 'buildr/git_auto_version'
 require 'buildr/gpg'
 
+Buildr::MavenCentral.define_publish_tasks(:profile_name => 'org.realityforge', :username => 'realityforge')
+
 KEYCLOAK = %w(
     org.keycloak:keycloak-admin-client:jar:11.0.0
     org.keycloak:keycloak-core:jar:11.0.0
