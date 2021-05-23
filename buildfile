@@ -58,7 +58,7 @@ define 'keycloak-converger' do
   compile.options.target = '1.8'
   compile.options.lint = 'all'
   compile.options.warnings = true
-  compile.options.other = %w(-Werror -Xmaxerrs 10000 -Xmaxwarns 10000)
+  compile.options.other = %w(-Xmaxerrs 10000 -Xmaxwarns 10000)
 
   project.version = ENV['PRODUCT_VERSION'] if ENV['PRODUCT_VERSION']
 
