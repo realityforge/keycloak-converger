@@ -1,6 +1,32 @@
+# Change Log
+
 ### Unreleased
 
+* Upgrade the `au.com.stocksoftware.idea.codestyle` artifact to version `1.17`.
+
+### [v1.13](https://github.com/realityforge/keycloak-converger/tree/v1.13) (2020-09-01) · [Full Changelog](https://github.com/realityforge/keycloak-converger/compare/v1.12...v1.13)
+
+* Collect client secrets for unmanaged clients.
+
+### [v1.12](https://github.com/realityforge/keycloak-converger/tree/v1.12) (2020-09-01) · [Full Changelog](https://github.com/realityforge/keycloak-converger/compare/v1.11...v1.12)
+
+* Add some additional logging when retrieving secrets.
+* Fix bug where client secrets were being incorrectly downloaded for public clients and not for confidential clients.
+
+### [v1.11](https://github.com/realityforge/keycloak-converger/tree/v1.11) (2020-09-01) · [Full Changelog](https://github.com/realityforge/keycloak-converger/compare/v1.10...v1.11)
+
+* Avoid mandating that the secrets directory exists.
+* Support configuration of the secrets directory using CLI arguments.
+
+### [v1.10](https://github.com/realityforge/keycloak-converger/tree/v1.10) (2020-09-01) · [Full Changelog](https://github.com/realityforge/keycloak-converger/compare/v1.9...v1.10)
+
+* Save the client secrets as part of the converge process.
+
+### [v1.9](https://github.com/realityforge/keycloak-converger/tree/v1.9) (2020-08-18) · [Full Changelog](https://github.com/realityforge/keycloak-converger/compare/v1.8...v1.9)
+
 * Upgrade the `org.realityforge.getopt4j` artifact to version `1.3`.
+* Automate the release process.
+* Upgrade keycloak libraries to `11.0.0`
 
 ### [v1.8](https://github.com/realityforge/keycloak-converger/tree/v1.8) · [Full Changelog](https://github.com/realityforge/keycloak-converger/compare/v1.7...v1.8)
 

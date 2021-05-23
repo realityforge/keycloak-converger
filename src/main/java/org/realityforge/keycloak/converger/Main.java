@@ -3,7 +3,9 @@ package org.realityforge.keycloak.converger;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,12 +14,16 @@ import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.ws.rs.core.Response;
 import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.resource.ClientResource;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.representations.idm.ClientRepresentation;
+import org.keycloak.representations.idm.CredentialRepresentation;
 import org.realityforge.getopt4j.CLArgsParser;
 import org.realityforge.getopt4j.CLOption;
 import org.realityforge.getopt4j.CLOptionDescriptor;
@@ -36,13 +42,14 @@ public class Main
   private static final int STANDARD_UNMANAGED_CLIENTS_OPT = 6;
   private static final int DELETE_UNKNOWN_CLIENTS_OPT = 7;
   private static final int DELETE_CLIENT_OPT = 8;
+  private static final int SECRETS_DIR_OPT = 9;
   private static final int ADMIN_USERNAME_OPT = 'u';
   private static final int ADMIN_PASSWORD_OPT = 'p';
   private static final int ENV_OPT = 'e';
   private static final int UNMANAGED_CLIENT_OPT = 'c';
   private static final int VERBOSE_OPT = 'v';
   private static final int DIR_OPT = 'd';
-
+  @Nonnull
   private static final CLOptionDescriptor[] OPTIONS = new CLOptionDescriptor[]{
     new CLOptionDescriptor( "help",
                             CLOptionDescriptor.ARGUMENT_DISALLOWED,
@@ -76,6 +83,10 @@ public class Main
                             CLOptionDescriptor.ARGUMENT_REQUIRED,
                             DIR_OPT,
                             "the directory of client configurations." ),
+    new CLOptionDescriptor( "secrets-dir",
+                            CLOptionDescriptor.ARGUMENT_REQUIRED,
+                            SECRETS_DIR_OPT,
+                            "the directory where client secrets are downloaded to." ),
     new CLOptionDescriptor( "env",
                             CLOptionDescriptor.ARGUMENTS_REQUIRED_2 | CLOptionDescriptor.DUPLICATES_ALLOWED,
                             ENV_OPT,
@@ -83,7 +94,7 @@ public class Main
     new CLOptionDescriptor( "unmanaged-client",
                             CLOptionDescriptor.ARGUMENTS_REQUIRED_2 | CLOptionDescriptor.DUPLICATES_ALLOWED,
                             UNMANAGED_CLIENT_OPT,
-                            "Client configurations that should not be deleted." ),
+                            "Client configurations that should not be deleted and should have clients downloaded." ),
     new CLOptionDescriptor( "standard-unmanaged-clients",
                             CLOptionDescriptor.ARGUMENT_DISALLOWED,
                             STANDARD_UNMANAGED_CLIENTS_OPT,
@@ -101,25 +112,34 @@ public class Main
                             VERBOSE_OPT,
                             "print verbose message while operating." )
   };
-
   private static final int SUCCESS_EXIT_CODE = 0;
   private static final int ERROR_PARSING_ARGS_EXIT_CODE = 1;
   private static final int ERROR_PATCHING_CODE = 2;
-
+  private static final int ERROR_WRITING_CLIENT_SECRET_CODE = 3;
   private static boolean c_verbose;
   private static boolean c_deleteUnmatchedClients;
+  @Nonnull
   private static final Map<String, String> c_envs = new HashMap<>();
+  @Nonnull
   private static final List<String> c_unmanagedClients = new ArrayList<>();
+  @Nonnull
   private static final List<String> c_clientsToDelete = new ArrayList<>();
   private static File c_dir;
+  @Nonnull
   private static String c_adminRealmName = "master";
+  @Nonnull
   private static String c_adminClient = "admin-cli";
+  @Nonnull
   private static String c_adminUsername = "admin";
+  @Nullable
   private static String c_adminPassword;
+  @Nullable
   private static String c_serverURL;
+  @Nullable
   private static String c_realmName;
+  private static File c_secretsDir;
 
-  public static void main( final String[] args )
+  public static void main( @Nonnull final String[] args )
   {
     if ( !processOptions( args ) )
     {
@@ -153,6 +173,7 @@ public class Main
       {
         removeClients( realm, c_clientsToDelete::contains );
       }
+      collectClientSecrets( realm, clients );
 
       System.exit( SUCCESS_EXIT_CODE );
     }
@@ -167,14 +188,13 @@ public class Main
     }
   }
 
-  private static void removeUnmatchedClients( final RealmResource realm, final Map<String, String> clients )
-    throws Exception
+  private static void removeUnmatchedClients( @Nonnull final RealmResource realm,
+                                              @Nonnull final Map<String, String> clients )
   {
     removeClients( realm, clientId -> !clients.containsKey( clientId ) && !c_unmanagedClients.contains( clientId ) );
   }
 
-  private static void removeClients( final RealmResource realm, final Predicate<String> shouldDelete )
-    throws Exception
+  private static void removeClients( @Nonnull final RealmResource realm, @Nonnull final Predicate<String> shouldDelete )
   {
     for ( final ClientRepresentation client : realm.clients().findAll() )
     {
@@ -186,7 +206,9 @@ public class Main
     }
   }
 
-  private static void deleteClient( final RealmResource realm, final String id, final String clientId )
+  private static void deleteClient( @Nonnull final RealmResource realm,
+                                    @Nonnull final String id,
+                                    @Nonnull final String clientId )
   {
     try
     {
@@ -200,7 +222,7 @@ public class Main
     }
   }
 
-  private static void uploadClients( final RealmResource realm, final Map<String, String> clients )
+  private static void uploadClients( @Nonnull final RealmResource realm, @Nonnull final Map<String, String> clients )
   {
     final List<ClientRepresentation> existing = realm.clients().findAll();
 
@@ -221,8 +243,64 @@ public class Main
     }
   }
 
-  private static ClientRepresentation findExistingClient( final List<ClientRepresentation> existing,
-                                                          final String clientID )
+  private static void collectClientSecrets( @Nonnull final RealmResource realm,
+                                            @Nonnull final Map<String, String> clients )
+  {
+    final List<ClientRepresentation> existing = realm.clients().findAll();
+    for ( final Map.Entry<String, String> entry : clients.entrySet() )
+    {
+      final ClientRepresentation client = findExistingClient( existing, entry.getKey() );
+      assert null != client;
+      collectClientSecret( realm, client );
+    }
+    for ( final String clientID : c_unmanagedClients )
+    {
+      final ClientRepresentation client = findExistingClient( existing, clientID );
+      if ( null != client )
+      {
+        collectClientSecret( realm, client );
+      }
+    }
+  }
+
+  private static void collectClientSecret( @Nonnull final RealmResource realm,
+                                           @Nonnull final ClientRepresentation client )
+  {
+    final Boolean publicClient = client.isPublicClient();
+    if ( null != publicClient && !publicClient )
+    {
+      info( "Retrieving client secret for confidential client with clientId '" + client.getClientId() + "'" );
+      final ClientResource clientResource = realm.clients().get( client.getId() );
+      final CredentialRepresentation secret = clientResource.getSecret();
+      if ( null != secret )
+      {
+        final String value = secret.getValue();
+        if ( null != value )
+        {
+          final Path dir = c_secretsDir.toPath();
+          final Path secretFile = dir.resolve( client.getClientId() );
+          try
+          {
+            if ( !Files.exists( dir ) )
+            {
+              Files.createDirectories( dir );
+            }
+            Files.write( secretFile, value.getBytes( StandardCharsets.US_ASCII ) );
+          }
+          catch ( final IOException ioe )
+          {
+            error( "Error writing keycloak secret for client " + client.getClientId() + " in " +
+                   "the realm " + c_realmName + ". Error: " + ioe );
+            System.exit( ERROR_WRITING_CLIENT_SECRET_CODE );
+          }
+        }
+      }
+    }
+  }
+
+  @Nullable
+  private static ClientRepresentation findExistingClient( @Nonnull final List<ClientRepresentation> existing,
+                                                          @Nonnull final String clientID )
   {
     ClientRepresentation client = null;
     for ( final ClientRepresentation candidate : existing )
@@ -236,15 +314,16 @@ public class Main
     return client;
   }
 
-  private static void updateClient( final RealmResource realm,
-                                    final ClientRepresentation client,
-                                    final String configuration )
+  private static void updateClient( @Nonnull final RealmResource realm,
+                                    @Nonnull final ClientRepresentation client,
+                                    @Nonnull final String configuration )
   {
     info( "Updating client with clientId '" + client.getClientId() + "'" );
     try
     {
       final ClientRepresentation candidate = realm.convertClientDescription( configuration );
-      realm.clients().get( client.getId() ).update( candidate );
+      final ClientResource clientResource = realm.clients().get( client.getId() );
+      clientResource.update( candidate );
     }
     catch ( final Exception e )
     {
@@ -253,7 +332,9 @@ public class Main
     }
   }
 
-  private static void createClient( final RealmResource realm, final String clientID, final String configuration )
+  private static void createClient( @Nonnull final RealmResource realm,
+                                    @Nonnull final String clientID,
+                                    @Nonnull final String configuration )
   {
     info( "Creating client with clientId '" + clientID + "'" );
     try
@@ -274,6 +355,7 @@ public class Main
     }
   }
 
+  @Nonnull
   private static Map<String, String> buildClientConfigurations()
     throws Exception
   {
@@ -298,7 +380,8 @@ public class Main
     return clientConfigurations;
   }
 
-  private static void buildClientConfiguration( final Map<String, String> clientConfigurations, final File file )
+  private static void buildClientConfiguration( @Nonnull final Map<String, String> clientConfigurations,
+                                                @Nonnull final File file )
     throws IOException
   {
     final String data = loadAndTransformClient( file );
@@ -320,7 +403,7 @@ public class Main
     throws IOException
   {
     final byte[] byteData = Files.readAllBytes( file.toPath() );
-    final String data = new String( byteData, "US-ASCII" );
+    final String data = new String( byteData, StandardCharsets.US_ASCII );
 
     return replaceUUIDs( replaceVars( data ) );
   }
@@ -328,7 +411,8 @@ public class Main
   /**
    * Need to replace UUIDs as the database uses them to uniquely distinguish elements.
    */
-  private static String replaceUUIDs( final String data )
+  @Nonnull
+  private static String replaceUUIDs( @Nonnull final String data )
   {
     final Pattern pattern =
       Pattern.compile( "[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}" );
@@ -354,9 +438,10 @@ public class Main
     }
   }
 
-  private static String replaceVars( final String data )
+  @Nonnull
+  private static String replaceVars( @Nonnull final String data )
   {
-    final Pattern pattern = Pattern.compile( "\\{\\{([^}].+)\\}\\}" );
+    final Pattern pattern = Pattern.compile( "\\{\\{([^}].+)}}" );
     final Matcher matcher = pattern.matcher( data );
 
     boolean result = matcher.find();
@@ -384,7 +469,7 @@ public class Main
     }
   }
 
-  private static boolean processOptions( final String[] args )
+  private static boolean processOptions( @Nonnull final String[] args )
   {
     // Parse the arguments
     final CLArgsParser parser = new CLArgsParser( args, OPTIONS );
@@ -466,6 +551,11 @@ public class Main
           c_unmanagedClients.add( option.getArgument() );
           break;
         }
+        case SECRETS_DIR_OPT:
+        {
+          c_secretsDir = new File( option.getArgument() );
+          break;
+        }
         case DIR_OPT:
         {
           c_dir = new File( option.getArgument() );
@@ -504,6 +594,23 @@ public class Main
       error( "Configuration directory specified " + c_dir.getAbsolutePath() + " is not a directory." );
       return false;
     }
+    if ( null != c_secretsDir )
+    {
+      if ( c_secretsDir.exists() && !c_secretsDir.canRead() )
+      {
+        error( "Secret directory specified " + c_secretsDir.getAbsolutePath() + " is not readable." );
+        return false;
+      }
+      if ( c_secretsDir.exists() && !c_secretsDir.isDirectory() )
+      {
+        error( "Secret directory specified " + c_secretsDir.getAbsolutePath() + " is not a directory." );
+        return false;
+      }
+    }
+    else
+    {
+      c_secretsDir = c_dir;
+    }
     if ( null == c_realmName )
     {
       error( "No realm specified to update." );
@@ -529,6 +636,7 @@ public class Main
       info( "Delete Unknown Clients: " + c_deleteUnmatchedClients );
 
       info( "Configuration directory: " + c_dir.getAbsolutePath() );
+      info( "Secrets directory: " + c_secretsDir.getAbsolutePath() );
       if ( !c_envs.isEmpty() )
       {
         info( "Env vars:" );
@@ -556,27 +664,21 @@ public class Main
   private static void printUsage()
   {
     final String lineSeparator = System.getProperty( "line.separator" );
-
-    final StringBuilder msg = new StringBuilder();
-
-    msg.append( "java " );
-    msg.append( Main.class.getName() );
-    msg.append( " [options] message" );
-    msg.append( lineSeparator );
-    msg.append( "Options: " );
-    msg.append( lineSeparator );
-
-    msg.append( CLUtil.describeOptions( OPTIONS ).toString() );
-
-    info( msg.toString() );
+    info( "java " +
+          Main.class.getName() +
+          " [options] message" +
+          lineSeparator +
+          "Options: " +
+          lineSeparator +
+          CLUtil.describeOptions( OPTIONS ) );
   }
 
-  private static void info( final String message )
+  private static void info( @Nonnull final String message )
   {
     System.out.println( message );
   }
 
-  private static void error( final String message )
+  private static void error( @Nonnull final String message )
   {
     System.out.println( "Error: " + message );
   }
